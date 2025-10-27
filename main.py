@@ -66,7 +66,7 @@ def game_over_screen(screen: pg.Surface, screen_size: int, image_src):
             if event.type == pg.KEYDOWN and event.key == pg.K_r:
                 return True
 def main():
-    bombs = 1
+    bombs = 40
     board_size = 15
     margin = 50
     screen_size = board_size*60+(margin*2)
