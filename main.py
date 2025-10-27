@@ -27,7 +27,7 @@ def game_over_screen(screen: pg.Surface, screen_size: int, image_src):
     result_image_rect = result_image.get_rect()
     result_image_rect.center = (screen_size // 2, screen_size // 2)
 
-    play_again_image = pg.image.load("play_again.png").convert()
+    play_again_image = pg.image.load("images/play_again.png").convert()
     play_again_image_rect = play_again_image.get_rect()
     play_again_image_rect.center = (screen_size // 2, screen_size // 2)
     play_again_image_rect.y = play_again_image_rect.y + result_image.get_height() - 30
@@ -145,7 +145,7 @@ def main():
                 screen.blit(text_surface, (50,0))
             if has_lost:
                 lose_sound_effect.play()
-                restart = game_over_screen(screen, screen_size, "you_lost.png")
+                restart = game_over_screen(screen, screen_size, "images/you_lost.png")
                 
                 playing = False
                 if not restart:
@@ -153,7 +153,7 @@ def main():
             
             if has_won:
                 win_sound_effect.play()
-                restart = game_over_screen(screen, screen_size, "winner.png")
+                restart = game_over_screen(screen, screen_size, "images/winner.png")
                 
                 playing = False
                 if not restart:
