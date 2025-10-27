@@ -1,101 +1,168 @@
-import os
+import pygame as pg
 from board import Board
 
-def start_screen() -> None:
 
-    def options():
-        print("Temporary options menu :)")
-        input("Press enter to go back...")
+pg.init()
+pg.font.init()
+pg.mixer.init()
 
-    os.system("cls" if os.name == "nt" else "clear")
-    print("Welcome to minesweeper")
-    print("----------------------")
-    print("1. Start game")
-    print("2. Options")
-    print("3. Quit")
+my_font = pg.font.SysFont('yugothicuiregular', 30)
 
-    choosen_option = input("\nChoose an option: ").strip()
+tick_sound_effect = pg.mixer.Sound("Sound/tick.wav")
+win_sound_effect = pg.mixer.Sound("Sound/win.wav")
+lose_sound_effect = pg.mixer.Sound("Sound/lose.wav")
 
-    if choosen_option == "1":
-        return
-    elif choosen_option == "2": # Är det bättre att skriva return start_screen() på båda ställen för tydlighets skull eller bör man bara ha 1?
-        options()
-        return start_screen()
-    elif choosen_option == "3":
-        print("Goodbye")
-        exit()
-    else:
-        os.system("cls" if os.name == "nt" else "clear")
-        print("Wrong input format.")
-    
-        return start_screen()
+tick_sound_effect.set_volume(0.5)
+win_sound_effect.set_volume(0.5)
+lose_sound_effect.set_volume(0.5)
 
-def get_user_input_coordinate(skip_menu_option: bool = False, option: str | None = None) -> tuple[str, tuple[int, int]]:
+def game_over_screen(screen: pg.Surface, screen_size: int, image_src):
 
-    if not skip_menu_option:
-        while True:
-            print("1. Activate coordinate (M1 click).")
-            print("2. Place Flag (M2 click).")
-            print("----------------------------------")
+    game_over_surface = pg.Surface((screen_size, screen_size))
+    game_over_surface.fill((0, 0, 0))
+    game_over_surface.set_alpha(75)
 
-            option = input("Choose option: ").strip()
+    result_image = pg.image.load(image_src).convert()
+    result_image.set_colorkey((255, 255, 255))
+    result_image_rect = result_image.get_rect()
+    result_image_rect.center = (screen_size // 2, screen_size // 2)
 
-            if option in ["1", "2"]:
-                break
-            else:
-                print("Invalid option. Enter 1 or 2. \n")
+    play_again_image = pg.image.load("play_again.png").convert()
+    play_again_image_rect = play_again_image.get_rect()
+    play_again_image_rect.center = (screen_size // 2, screen_size // 2)
+    play_again_image_rect.y = play_again_image_rect.y + result_image.get_height() - 30
+
+    combined_height = result_image.get_height() + play_again_image.get_height() + 20
+    max_height = screen_size/2
+    if combined_height > (max_height):
+        scale_factor = max_height / combined_height
+        
+        result_image = pg.transform.scale(result_image, (int(result_image.get_width() * scale_factor), int(result_image.get_height() * scale_factor)))
+        play_again_image = pg.transform.scale(play_again_image, (int(play_again_image.get_width() * scale_factor), int(play_again_image.get_height() * scale_factor)))
+
+
+        result_image_rect = result_image.get_rect()
+        result_image_rect.center = (screen_size // 2, screen_size // 2)
+        
+        play_again_image_rect = play_again_image.get_rect()
+        play_again_image_rect.center = (screen_size // 2, screen_size // 2)
+        play_again_image_rect.y = play_again_image_rect.y + result_image.get_height() - 30
+
+        
+    screen.blit(game_over_surface, (0, 0))
+    screen.blit(result_image, result_image_rect)
+    screen.blit(play_again_image, play_again_image_rect)
+    pg.display.flip()
 
     while True:
-        user_coordinate_input = input("Input format - x, y (or *back* to go back to the options menu): ").strip()
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                return False
+            
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                if play_again_image_rect.collidepoint(event.pos[0], event.pos[1]):
+                    return True
+            
+            if event.type == pg.KEYDOWN and event.key == pg.K_r:
+                return True
+def main():
+    bombs = 1
+    board_size = 15
+    margin = 50
+    screen_size = board_size*60+(margin*2)
+    screen_resolution = (screen_size, screen_size)
+    
+    screen = pg.display.set_mode(screen_resolution)
+    pg.display.set_caption("Minesweeper")
 
-        if user_coordinate_input.lower() == "back":
-            return get_user_input_coordinate()
+    clock = pg.time.Clock()
+    FPS = 60
+    
+    running = True
+
+    while running:
+        board = Board(board_size, board_size, bombs, margin = margin, tile_size=60)
+        first_click = True
+        has_lost = False
+        has_won = False
+
         
-        try:
-            x, y = user_coordinate_input.split(",")
-            x, y = int(x), int(y[-1])
-            return option, (x-1, y-1) # Ändra till indexvärdet som måste vara ofsett med -1
-        except (ValueError, IndexError):
-            print("Wrong input format.")
-            return get_user_input_coordinate(True, option)    
+        playing = True
+        while playing:
+            clock.tick(FPS)
+            current_time = pg.time.get_ticks()
+            
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    running = False
+                    playing = False
+                
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1 and not has_lost:
+                    try:
+                        x = (event.pos[0] - margin) // 60
+                        y = (event.pos[1] - margin) // 60
+                        
+                        if first_click:
+                            first_click = False
+                            bombs = board.populate_bombs(x, y)
+                            text_surface = my_font.render(f"{bombs}/{bombs} flags", False, (30, 0, 0))
+                            
+                            board.check_adjacent_bombs()
+                        
+                        tick_sound_effect.play()
 
-def main() -> None:
-    start_screen()
-    
-    board = Board(7, 7, 10)
-    board.print_board()
-    
-    _, (x, y) = get_user_input_coordinate(skip_menu_option=True)
-    os.system("cls" if os.name == "nt" else "clear")
-    placed_bombs = board.populate_bombs(x, y)
-    print(f"Bombs: {placed_bombs}")
+                        has_lost = board.activate_cell(x, y)
+                        has_won =  board.check_win()
+                    except IndexError:
+                        pass
+                
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 3 and not has_lost:
+                    if not first_click:
+                        try:
+                            x = (event.pos[0] - margin) // 60
+                            y = (event.pos[1] - margin) // 60
+                            board.toggle_flag(x, y)
+                            flags = bombs - board.amount_of_placed_flags
+                            text_surface = my_font.render(f"{flags}/{bombs} flags", False, (0, 0, 0))
+                        except IndexError:
+                            pass
+                
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 2 and not has_lost:
+                    if not first_click:
+                        try:
+                            x = (event.pos[0] - margin) // 60
+                            y = (event.pos[1] - margin) // 60
+                            has_lost = board.middle_click(x, y)
+                            has_won =  board.check_win()
+                            tick_sound_effect.play()
+                        except IndexError:
+                            pass
 
-    board.check_adjacent_bombs()
+            
+            
+            board.print_board(pg.display.get_surface())
+            if not first_click:
+                screen.blit(text_surface, (50,0))
+            if has_lost:
+                lose_sound_effect.play()
+                restart = game_over_screen(screen, screen_size, "you_lost.png")
+                
+                playing = False
+                if not restart:
+                    running = False
+            
+            if has_won:
+                win_sound_effect.play()
+                restart = game_over_screen(screen, screen_size, "winner.png")
+                
+                playing = False
+                if not restart:
+                    running = False
+                
 
-    board.activate_cell(x, y)
+            pg.display.flip()
     
-    while True:
-        cell_value = None
-    
-        board.print_board()
-    
-        option, (x, y) = get_user_input_coordinate()
-        os.system("cls" if os.name == "nt" else "clear")
-        if option == "1":
-            cell_value = board.activate_cell(x, y)
-        elif option == "2":
-            board.toggle_flag(x, y)
-        
-        if cell_value:
-            print(f"{cell_value}")
-            if cell_value == "You hit a mine, you lost.":
-                board.print_board()
-                break
-        
-        if board.check_win():
-            board.print_board()
-            print("You won!")
-            break
+    pg.quit()
 
 if __name__ == "__main__":
     main()
