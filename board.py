@@ -31,8 +31,6 @@ class Board:
 
         if cell.is_clicked:
             return
-        
-        
 
         cell.activate()
 
@@ -57,7 +55,7 @@ class Board:
 
         self.cells[y][x].toggle_flag()
 
-    def middle_click(self, x: int, y: int) -> bool|None:
+    def middle_click(self, x: int, y: int) -> bool | None:
 
         cell = self.cells[y][x]
 

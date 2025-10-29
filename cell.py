@@ -1,7 +1,7 @@
 import pygame as pg
 
 class Cell:
-    def __init__(self, x: int, y: int, cell_size) -> None:
+    def __init__(self, x: int, y: int, cell_size: int) -> None:
         self.x = x
         self.y = y
         self.cell_size = cell_size
@@ -55,7 +55,7 @@ class Cell:
             self.image = pg.image.load("Sprites\\TileUnknown.png")
             self.scale_image()
 
-    def activate(self) -> bool:
+    def activate(self) -> None:
         self.is_clicked = True
         
         if self.is_bomb:
@@ -68,12 +68,12 @@ class Cell:
             self.image = pg.image.load(f"Sprites\\TileEmpty.png")
             self.scale_image()
     
-    def show_bomb(self):
+    def show_bomb(self) -> None:
         if self.is_bomb and not self.is_clicked:
             self.image = pg.image.load("Sprites\\TileMine.png")
             self.scale_image()
 
-    def scale_image(self):
+    def scale_image(self) -> None:
         self.image = pg.transform.scale(self.image, (self.cell_size, self.cell_size))
 
     def set_adjacent_bombs(self, bombs: int) -> None:
