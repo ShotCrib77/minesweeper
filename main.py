@@ -32,6 +32,8 @@ def game_over_screen(screen: pg.Surface, screen_size: int, image_src):
     play_again_image_rect.center = (screen_size // 2, screen_size // 2)
     play_again_image_rect.y = play_again_image_rect.y + result_image.get_height() - 30
 
+
+    # Image resize if images are more than half of the screen
     combined_height = result_image.get_height() + play_again_image.get_height() + 20
     max_height = screen_size/2
     if combined_height > (max_height):
@@ -152,6 +154,9 @@ def main():
             if not first_click:
                 screen.blit(text_surface, (50,0))
             if has_lost:
+                board.reveal_bombs()
+                board.print_board(screen)
+                
                 lose_sound_effect.play()
                 restart = game_over_screen(screen, screen_size, "images/you_lost.png")
                 
