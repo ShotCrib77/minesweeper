@@ -65,11 +65,27 @@ def game_over_screen(screen: pg.Surface, screen_size: int, image_src):
             
             if event.type == pg.KEYDOWN and event.key == pg.K_r:
                 return True
+
+
+
 def main():
+
+    def input_coordinates_to_index(click_x, click_y):
+        x = (click_x - margin) // tile_size
+        y = (click_y - margin) // tile_size
+
+        if click_x <= margin or click_x > (screen_size - margin):
+            x = False
+        if click_y <= margin or click_y > (screen_size - margin):
+            y = False
+        
+        return x, y
+
     bombs = 40
-    board_size = 15
+    board_size = 15 # 15 x 15
     margin = 50
-    screen_size = board_size*60+(margin*2)
+    tile_size = 60
+    screen_size = board_size*tile_size+(margin*2)
     screen_resolution = (screen_size, screen_size)
     
     screen = pg.display.set_mode(screen_resolution)
@@ -81,7 +97,7 @@ def main():
     running = True
 
     while running:
-        board = Board(board_size, board_size, bombs, margin = margin, tile_size=60)
+        board = Board(board_size, board_size, bombs, margin = margin, tile_size=tile_size)
         first_click = True
         has_lost = False
         has_won = False
@@ -98,10 +114,9 @@ def main():
                     playing = False
                 
                 if event.type == pg.MOUSEBUTTONDOWN and event.button == 1 and not has_lost:
-                    try:
-                        x = (event.pos[0] - margin) // 60
-                        y = (event.pos[1] - margin) // 60
-                        
+                    x, y = input_coordinates_to_index(event.pos[0], event.pos[1])
+    
+                    if x is not False and y is not False:
                         if first_click:
                             first_click = False
                             bombs = board.populate_bombs(x, y)
@@ -113,30 +128,23 @@ def main():
 
                         has_lost = board.activate_cell(x, y)
                         has_won =  board.check_win()
-                    except IndexError:
-                        pass
-                
+            
                 if event.type == pg.MOUSEBUTTONDOWN and event.button == 3 and not has_lost:
                     if not first_click:
-                        try:
-                            x = (event.pos[0] - margin) // 60
-                            y = (event.pos[1] - margin) // 60
+                        x, y = input_coordinates_to_index(event.pos[0] , event.pos[1])
+                        if x is not False and y is not False:
                             board.toggle_flag(x, y)
                             flags = bombs - board.amount_of_placed_flags
                             text_surface = my_font.render(f"{flags}/{bombs} flags", False, (0, 0, 0))
-                        except IndexError:
-                            pass
+
                 
                 if event.type == pg.MOUSEBUTTONDOWN and event.button == 2 and not has_lost:
                     if not first_click:
-                        try:
-                            x = (event.pos[0] - margin) // 60
-                            y = (event.pos[1] - margin) // 60
+                        x, y = input_coordinates_to_index(event.pos[0] , event.pos[1])
+                        if x is not False and y is not False:
                             has_lost = board.middle_click(x, y)
                             has_won =  board.check_win()
                             tick_sound_effect.play()
-                        except IndexError:
-                            pass
 
             
             
